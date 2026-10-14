@@ -23,13 +23,18 @@ object PaletteClinitFingerprint : Fingerprint(
 
 /**
  * Fingerprint matching the barcode/QR code bitmap generator method in gz.q7.
- * Unique in the app for creating an ARGB_8888 bitmap and calling setPixels to write pixel arrays.
+ * Unique signature with parameters (BitMatrix, int) returning Bitmap,
+ * and the inner loop instruction pattern setting the pixel colors.
  */
 object QrCodeBitmapFingerprint : Fingerprint(
+    name = "b",
     returnType = "Landroid/graphics/Bitmap;",
+    parameters = listOf("Ln40/b;", "I"),
     filters = listOf(
-        opcode(Opcode.INVOKE_STATIC), // Bitmap.createBitmap
-        opcode(Opcode.INVOKE_VIRTUAL), // Bitmap.setPixels
-        opcode(Opcode.RETURN_OBJECT)
+        opcode(Opcode.IF_EQZ),
+        opcode(Opcode.MOVE),
+        opcode(Opcode.GOTO),
+        opcode(Opcode.MOVE),
+        opcode(Opcode.APUT)
     )
 )

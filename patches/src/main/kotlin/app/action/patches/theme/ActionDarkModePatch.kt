@@ -2,6 +2,7 @@ package app.action.patches.theme
 
 import app.action.patches.shared.Constants.COMPATIBILITY_ACTION
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 
 private data class ColorOverride(
@@ -120,73 +121,16 @@ val actionDarkModePatch = bytecodePatch(
 
         method.addInstructions(returnIndex, smaliInstructions)
 
-        // Inject QR code / barcode renderer override into gz.q7.b
-        // Generates a high-contrast black QR code on solid white background for cash register scanning
+        // Override QR code / barcode renderer in gz.q7.b
+        // Changes foreground color to black and background color to solid white
         val qrMethod = QrCodeBitmapFingerprint.method
-        val bitMatrixType = qrMethod.parameterTypes.first()
+        val bgMoveInstruction = QrCodeBitmapFingerprint.instructionMatches[3]
+        val bgMoveIndex = bgMoveInstruction.index
 
-        qrMethod.addInstructions(
-            0,
-            """
-                # Read width and height from BitMatrix p0
-                iget v0, p0, $bitMatrixType->a:I
-                iget v1, p0, $bitMatrixType->b:I
+        // Replace background color assignment (move v8, v0) with white constant (const/4 v8, -1)
+        qrMethod.replaceInstruction(bgMoveIndex, "const/4 v8, -0x1")
 
-                # Allocate pixel array of size width * height
-                mul-int v2, v0, v1
-                new-array v2, v2, [I
-
-                # Fill entire pixel array with solid white (0xFFFFFFFF = -1)
-                const/4 v3, -0x1
-                invoke-static {v2, v3}, Ljava/util/Arrays;->fill([II)V
-
-                # Constant for solid black QR modules (0xFF000000 = -0x1000000)
-                const/high16 v3, -0x1000000
-
-                # Outer loop over y coordinates (0 .. height - 1)
-                const/4 v4, 0x0
-                :loop_y
-                if-ge v4, v1, :create_bmp
-                mul-int v5, v4, v0
-
-                # Inner loop over x coordinates (0 .. width - 1)
-                const/4 v6, 0x0
-                :loop_x
-                if-ge v6, v0, :next_y
-
-                # Check BitMatrix bit at (x, y)
-                invoke-virtual {p0, v6, v4}, $bitMatrixType->a(II)Z
-                move-result v7
-                if-eqz v7, :skip_module
-
-                # Module bit is set -> write black pixel
-                add-int v7, v5, v6
-                aput v3, v2, v7
-
-                :skip_module
-                add-int/lit8 v6, v6, 0x1
-                goto :loop_x
-
-                :next_y
-                add-int/lit8 v4, v4, 0x1
-                goto :loop_y
-
-                :create_bmp
-                sget-object v4, Landroid/graphics/Bitmap${'$'}Config;->ARGB_8888:Landroid/graphics/Bitmap${'$'}Config;
-                invoke-static {v0, v1, v4}, Landroid/graphics/Bitmap;->createBitmap(IILandroid/graphics/Bitmap${'$'}Config;)Landroid/graphics/Bitmap;
-                move-result-object v3
-
-                const/4 v5, 0x0
-                const/4 v7, 0x0
-                const/4 v8, 0x0
-                move-object v4, v2
-                move v6, v0
-                move v9, v0
-                move v10, v1
-                invoke-virtual/range {v3 .. v10}, Landroid/graphics/Bitmap;->setPixels([IIIIIII)V
-
-                return-object v3
-            """
-        )
+        // Force foreground color parameter (p1) to solid black (0xFF000000) at method entry
+        qrMethod.addInstructions(0, "const/high16 p1, -0x1000000")
     }
 }
