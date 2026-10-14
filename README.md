@@ -17,6 +17,22 @@ This repository provides a custom patch bundle for Morphe that enables Dark Mode
 ## Patches list
 
 <!-- PATCHES_START EXPANDED -->
+> **[v1.0.0-dev.1](https://github.com/janowakps/morphe-patches-action/releases/tag/v1.0.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;1 patches total
+<details open>
+<summary>📦 Action&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 1.133.0 |
+| :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Dark Mode](#dark-mode) | Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette. |  |
+
+</details>
+
 <!-- PATCHES_END -->
 
 ## Development
