@@ -1,3 +1,9 @@
+## [1.0.0-dev.15](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.14...v1.0.0-dev.15) (2026-10-14)
+
+### ✨ New Features
+
+* **theme:** add gentle dark gray rounded background to product photos in dark mode ([d03f819](https://github.com/janowakps/morphe-patches-action/commit/d03f8196b3214d8eebefa748d628c0dad13746b8))
+
 ## [1.0.0-dev.14](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.13...v1.0.0-dev.14) (2026-10-14)
 
 ### 🐛 Bug Fixes

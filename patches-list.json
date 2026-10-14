@@ -1,10 +1,10 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.0.0-dev.14",
+  "version": "1.0.0-dev.15",
   "patches": [
     {
       "name": "Dark Mode",
-      "description": "Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette and customer card QR code.",
+      "description": "Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette, product photo backgrounds, and customer card QR code.",
       "default": true,
       "category": null,
       "compatiblePackages": [
