@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.0.0-dev.4",
+  "version": "1.0.0-dev.5",
   "patches": [
     {
       "name": "Dark Mode",
@@ -38,6 +38,39 @@
     {
       "name": "Dark Splash Screen",
       "description": "Forces dark window and splash screen backgrounds in styles.xml to eliminate the white flash on app startup.",
+      "default": true,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.action.consumerapp",
+          "name": "Action",
+          "description": null,
+          "apkFileType": "APK",
+          "appIconColor": "#001489",
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.133.0",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": null,
+              "versionCodes": null,
+              "isExperimental": true,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "Weekly Deals Sorting",
+      "description": "Adds sorting options (by lowest price and highest discount percentage) with interactive chips to the Weekly Deals tabs.",
       "default": true,
       "category": null,
       "compatiblePackages": [

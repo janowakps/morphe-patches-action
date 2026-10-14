@@ -1,3 +1,13 @@
+## [1.0.0-dev.5](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** escape dollar sign in nested class type descriptor ([ccaa105](https://github.com/janowakps/morphe-patches-action/commit/ccaa105d670a4b242f688a7a0b117947663e982d))
+
+### ✨ New Features
+
+* **promotions:** add price and discount sorting chips to weekly deals ([f1c45f1](https://github.com/janowakps/morphe-patches-action/commit/f1c45f1535b20bbef44733996ddabd7beb705448))
+
 ## [1.0.0-dev.4](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2026-10-14)
 
 ### 🐛 Bug Fixes

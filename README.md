@@ -17,9 +17,9 @@ This repository provides a custom patch bundle for Morphe that enables Dark Mode
 ## Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.0-dev.4](https://github.com/janowakps/morphe-patches-action/releases/tag/v1.0.0-dev.4)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;2 patches total
+> **[v1.0.0-dev.5](https://github.com/janowakps/morphe-patches-action/releases/tag/v1.0.0-dev.5)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
 <details open>
-<summary>📦 Action&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
+<summary>📦 Action&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -31,6 +31,7 @@ This repository provides a custom patch bundle for Morphe that enables Dark Mode
 |----------|----------------|-----------|
 | [Dark Mode](#dark-mode) | Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette and customer card QR code. |  |
 | [Dark Splash Screen](#dark-splash-screen) | Forces dark window and splash screen backgrounds in styles.xml to eliminate the white flash on app startup. |  |
+| [Weekly Deals Sorting](#weekly-deals-sorting) | Adds sorting options (by lowest price and highest discount percentage) with interactive chips to the Weekly Deals tabs. |  |
 
 </details>
 
