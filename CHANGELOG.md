@@ -1,3 +1,9 @@
+## [1.0.0-dev.11](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.10...v1.0.0-dev.11) (2026-10-14)
+
+### ✨ New Features
+
+* **promotions:** automatically load all weekly promotional pages when sorting ([c3f2d3e](https://github.com/janowakps/morphe-patches-action/commit/c3f2d3e42a0e6fc9370d9c72efdaaf4c3a7164d3))
+
 ## [1.0.0-dev.10](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.9...v1.0.0-dev.10) (2026-10-14)
 
 ### 🐛 Bug Fixes
