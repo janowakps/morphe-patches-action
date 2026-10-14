@@ -1,3 +1,9 @@
+## [1.0.0-dev.9](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.8...v1.0.0-dev.9) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** use yb0.a parameter type for composer method l ([48ee60d](https://github.com/janowakps/morphe-patches-action/commit/48ee60d1dd5356955bf3ad9c32c898f1af0d1ccc))
+
 ## [1.0.0-dev.8](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-10-14)
 
 ### 🐛 Bug Fixes
