@@ -1,3 +1,9 @@
+## [1.0.0-dev.7](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** use invoke-static/range for parameter register p0 ([40bf748](https://github.com/janowakps/morphe-patches-action/commit/40bf74887a919bdd1ee639abde53842d23586913))
+
 ## [1.0.0-dev.6](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2026-10-14)
 
 ### 🐛 Bug Fixes
