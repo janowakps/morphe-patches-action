@@ -3,7 +3,6 @@ package app.action.patches.theme
 import app.action.patches.shared.Constants.COMPATIBILITY_ACTION
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
-import com.android.tools.smali.dexlib2.Opcode
 
 @Suppress("unused")
 val actionDarkModePatch = bytecodePatch(
@@ -14,14 +13,9 @@ val actionDarkModePatch = bytecodePatch(
     compatibleWith(COMPATIBILITY_ACTION)
 
     execute {
+        val returnIndex = PaletteClinitFingerprint.instructionMatches.last().index
         val method = PaletteClinitFingerprint.method
         val paletteClass = method.definingClass
-
-        // Locate the return-void opcode at the end of the static initializer
-        val returnIndex = method.instructions.indexOfLast { it.opcode == Opcode.RETURN_VOID }
-        if (returnIndex == -1) {
-            throw IllegalStateException("Failed to find return-void opcode in palette <clinit>")
-        }
 
         // Inject dark theme color overrides right before return-void
         method.addInstructions(
