@@ -1,3 +1,9 @@
+## [1.0.0-dev.10](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.9...v1.0.0-dev.10) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** format sorting chips as horizontal pill buttons with dark theme styling ([79f03dc](https://github.com/janowakps/morphe-patches-action/commit/79f03dc2e5f9b37aab1b11ec16e60e2f850c0b27))
+
 ## [1.0.0-dev.9](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.8...v1.0.0-dev.9) (2026-10-14)
 
 ### 🐛 Bug Fixes
