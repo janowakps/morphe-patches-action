@@ -39,14 +39,4 @@ object QrCodeBitmapFingerprint : Fingerprint(
     )
 )
 
-/**
- * Fingerprint matching the root Compose image composable method in hg.c.
- * Signature: hg.c.a(Object, String, Modifier, Alignment, ContentScale, Integer, Integer, Composer, int)V
- * Unique string literal: "rememberAsyncImagePainter"
- */
-object ProductImageComposableFingerprint : Fingerprint(
-    name = "a",
-    returnType = "V",
-    strings = listOf("rememberAsyncImagePainter")
-)
 

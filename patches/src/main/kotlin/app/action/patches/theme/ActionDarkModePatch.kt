@@ -14,12 +14,10 @@ private data class ColorOverride(
 @Suppress("unused")
 val actionDarkModePatch = bytecodePatch(
     name = "Dark Mode",
-    description = "Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette, product photo backgrounds, and customer card QR code.",
+    description = "Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette and customer card QR code.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_ACTION)
-
-    extendWith("extensions/extension.mpe")
 
     execute {
         val returnIndex = PaletteClinitFingerprint.instructionMatches.last().index
@@ -36,7 +34,7 @@ val actionDarkModePatch = bytecodePatch(
             ColorOverride("e", 0xFF9E9E9EL, "neutral500: Auxiliary text / muted (#FF8593A3 -> #9E9E9E)"),
             ColorOverride("g", 0xFFC4C4C4L, "neutral700: Secondary text and subtitles (#FF505862 -> #C4C4C4)"),
             ColorOverride("h", 0xFFF0F0F0L, "neutral900: Primary text and titles (#FF1A1A1A -> #F0F0F0)"),
-            ColorOverride("A0", 0xFF1E1E1EL, "cardBackground: Cards and tiles (#FFFFFFFF -> #1E1E1E)"),
+            ColorOverride("A0", 0xFF282828L, "cardBackground: Cards and tiles (#FFFFFFFF -> #282828)"),
 
             // Primary Brand Colors (darkBlue family)
             ColorOverride("i", 0xFF1A2333L, "darkBlue50: Header card and pill container background (#E6E8F3 -> #1A2333)"),
@@ -134,19 +132,7 @@ val actionDarkModePatch = bytecodePatch(
 
         // Force foreground color parameter (p1) to solid black (0xFF000000) at method entry
         qrMethod.addInstructions(0, "const/high16 p1, -0x1000000")
-
-        // Hook Compose Image in hg.c.a:
-        // Applies a gentle dark gray (#2E2E2E) rounded background and clipping to product photos
-        // so transparent product PNGs are clearly visible against the dark card surface.
-        // Delegates to ActionExtension.wrapProductImageModifier with full try-catch safety.
-        val imgMethod = ProductImageComposableFingerprint.method
-        val imgBgSmali = """
-            move-object v0, p2
-            move-object v1, p0
-            invoke-static {v0, v1}, Lapp/action/extension/ActionExtension;->wrapProductImageModifier(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-            move-result-object p2
-        """.trimIndent()
-        imgMethod.addInstructions(0, imgBgSmali)
     }
 }
+
 
