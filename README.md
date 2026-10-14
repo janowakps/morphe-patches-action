@@ -17,9 +17,9 @@ This repository provides a custom patch bundle for Morphe that enables Dark Mode
 ## Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.0-dev.2](https://github.com/janowakps/morphe-patches-action/releases/tag/v1.0.0-dev.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;1 patches total
+> **[v1.0.0-dev.3](https://github.com/janowakps/morphe-patches-action/releases/tag/v1.0.0-dev.3)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;2 patches total
 <details open>
-<summary>📦 Action&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<summary>📦 Action&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -29,7 +29,8 @@ This repository provides a custom patch bundle for Morphe that enables Dark Mode
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
-| [Dark Mode](#dark-mode) | Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette. |  |
+| [Dark Mode](#dark-mode) | Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette and customer card QR code. |  |
+| [Dark Splash Screen](#dark-splash-screen) | Forces dark window and splash screen backgrounds in styles.xml to eliminate the white flash on app startup. |  |
 
 </details>
 
