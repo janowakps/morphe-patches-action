@@ -19,11 +19,13 @@ val actionPromotionSortPatch = bytecodePatch(
 
     execute {
         // Hook 1: Product grid sorting at bq.a0.d entry
+        // Parameter p0 is register v20 (> 15), so Dalvik format 35c (invoke-static) cannot encode it.
+        // Format 3rc (invoke-static/range) must be used.
         val gridMethod = ProductGridBuildFingerprint.method
         gridMethod.addInstructions(
             0,
             """
-                invoke-static {p0}, $EXTENSION_CLASS->sortProductList(Ljava/util/List;)Ljava/util/List;
+                invoke-static/range {p0 .. p0}, $EXTENSION_CLASS->sortProductList(Ljava/util/List;)Ljava/util/List;
                 move-result-object p0
             """
         )
