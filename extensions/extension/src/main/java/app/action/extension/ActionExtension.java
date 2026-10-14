@@ -67,11 +67,14 @@ public final class ActionExtension {
         if (lazyListScope == null) return;
 
         try {
+            android.util.Log.i("ActionExtension", "addSortingChips called with lazyListScope=" + lazyListScope);
             ClassLoader cl = lazyListScope.getClass().getClassLoader();
             Class<?> hClass = cl.loadClass("h2.h");
             Class<?> pClass = cl.loadClass("yb0.p");
             Class<?> o00aClass = cl.loadClass("o00.a");
             Class<?> u3cClass = cl.loadClass("u3.c");
+            final Class<?> zClass = cl.loadClass("jb0.z");
+            final Object unitInstance = zClass.getField("a").get(null);
 
             final Object vm = viewModel;
             final ClassLoader loader = cl;
@@ -83,7 +86,7 @@ public final class ActionExtension {
                         if (args != null && args.length >= 1 && args[0] != null) {
                             renderChips(args[0], vm, loader);
                         }
-                        return null;
+                        return unitInstance;
                     }
                     if ("toString".equals(method.getName())) {
                         return "SortingChipsBlock";
@@ -92,13 +95,15 @@ public final class ActionExtension {
                 }
             });
 
-            Constructor<?> u3cCons = u3cClass.getConstructor(int.class, boolean.class, Object.class);
-            Object composableLambda = u3cCons.newInstance(133742, true, composableBlock);
+            // u3.c constructor is (Object content, boolean tracked, int key)
+            Constructor<?> u3cCons = u3cClass.getConstructor(Object.class, boolean.class, int.class);
+            Object composableLambda = u3cCons.newInstance(composableBlock, true, 133742);
 
             Method aMethod = o00aClass.getMethod("a", hClass, Object.class, Object.class, pClass);
             aMethod.invoke(null, lazyListScope, "action_sorting_chips", "action_sorting_chips", composableLambda);
+            android.util.Log.i("ActionExtension", "addSortingChips successfully registered item into LazyListScope");
         } catch (Throwable t) {
-            t.printStackTrace();
+            android.util.Log.e("ActionExtension", "Error in addSortingChips", t);
         }
     }
 
@@ -107,6 +112,7 @@ public final class ActionExtension {
      */
     private static void renderChips(Object composer, Object viewModel, ClassLoader cl) {
         try {
+            android.util.Log.i("ActionExtension", "renderChips started");
             Class<?> g0Class = composer.getClass();
             Method d0Method = g0Class.getMethod("d0");
             Method lMethod = g0Class.getMethod("l", Object.class);
@@ -116,16 +122,16 @@ public final class ActionExtension {
             Field sField = g0Class.getField("S");
             Field tField = g0Class.getField("T");
 
-            // Row measure policy: e2.k2.a(e2.j.c, a4.b.j, composer, 0)
-            Method k2a = cl.loadClass("e2.k2").getMethod("a",
-                cl.loadClass("e2.g"),
-                cl.loadClass("a4.d"),
+            // Row measure policy: e2.z.a(e2.j.c, a4.b.n, composer, 48)
+            Method zaMethod = cl.loadClass("e2.z").getMethod("a",
+                cl.loadClass("e2.i"),
+                cl.loadClass("a4.c"),
                 cl.loadClass("k3.j"),
                 int.class
             );
             Object arrangementCenter = cl.loadClass("e2.j").getField("c").get(null);
-            Object alignmentCenter = cl.loadClass("a4.b").getField("j").get(null);
-            Object measurePolicy = k2a.invoke(null, arrangementCenter, alignmentCenter, composer, 0);
+            Object alignmentCenter = cl.loadClass("a4.b").getField("n").get(null);
+            Object measurePolicy = zaMethod.invoke(null, arrangementCenter, alignmentCenter, composer, 48);
 
             // Setters in z4.g
             Class<?> z4gClass = cl.loadClass("z4.g");
@@ -185,18 +191,19 @@ public final class ActionExtension {
             Object chipModifier = padMethod.invoke(null, baseModifier, 4.0f, 0.0f);
 
             // Chip 1: Default
-            hMethod.invoke(null, "Domyślnie", sortMode == 0, createOnClickProxy(0, viewModel, cl), chipModifier, composer, 0);
+            hMethod.invoke(null, "Domy\u015blnie", sortMode == 0, createOnClickProxy(0, viewModel, cl), chipModifier, composer, 0);
 
             // Chip 2: Price Ascending
-            hMethod.invoke(null, "Cena ↑", sortMode == 1, createOnClickProxy(1, viewModel, cl), chipModifier, composer, 0);
+            hMethod.invoke(null, "Cena \u2191", sortMode == 1, createOnClickProxy(1, viewModel, cl), chipModifier, composer, 0);
 
             // Chip 3: Discount Descending
-            hMethod.invoke(null, "% Rabatu ↓", sortMode == 2, createOnClickProxy(2, viewModel, cl), chipModifier, composer, 0);
+            hMethod.invoke(null, "% Rabatu \u2193", sortMode == 2, createOnClickProxy(2, viewModel, cl), chipModifier, composer, 0);
 
             // End Row node
             qMethod.invoke(composer, true);
+            android.util.Log.i("ActionExtension", "renderChips completed successfully");
         } catch (Throwable t) {
-            t.printStackTrace();
+            android.util.Log.e("ActionExtension", "Error in renderChips", t);
         }
     }
 
@@ -209,13 +216,14 @@ public final class ActionExtension {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if ("invoke".equals(method.getName())) {
+                    android.util.Log.i("ActionExtension", "Sorting chip clicked: mode=" + mode);
                     sortMode = mode;
                     if (viewModel != null) {
                         try {
                             Method bMethod = viewModel.getClass().getMethod("b");
                             bMethod.invoke(viewModel);
                         } catch (Throwable t) {
-                            t.printStackTrace();
+                            android.util.Log.e("ActionExtension", "Failed to trigger viewModel refresh", t);
                         }
                     }
                     return unitInstance;
