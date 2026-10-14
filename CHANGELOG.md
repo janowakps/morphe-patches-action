@@ -1,3 +1,9 @@
+## [1.0.0-dev.12](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.11...v1.0.0-dev.12) (2026-10-14)
+
+### ✨ New Features
+
+* optimize weekly deals pagination, add bidirectional price sorting, and fix badge clipping ([78bf0af](https://github.com/janowakps/morphe-patches-action/commit/78bf0af292596d0e07fbad46c103bba92283fc92))
+
 ## [1.0.0-dev.11](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.10...v1.0.0-dev.11) (2026-10-14)
 
 ### ✨ New Features
