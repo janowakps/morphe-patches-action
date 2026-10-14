@@ -115,7 +115,7 @@ public final class ActionExtension {
             android.util.Log.i("ActionExtension", "renderChips started");
             Class<?> g0Class = composer.getClass();
             Method d0Method = g0Class.getMethod("d0");
-            Method lMethod = g0Class.getMethod("l", Object.class);
+            Method lMethod = g0Class.getMethod("l", cl.loadClass("yb0.a"));
             Method m0Method = g0Class.getMethod("m0");
             Method qMethod = g0Class.getMethod("q", boolean.class);
             Method mMethod = g0Class.getMethod("m");
