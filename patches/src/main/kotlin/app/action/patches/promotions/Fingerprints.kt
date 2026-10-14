@@ -15,7 +15,7 @@ object ProductGridBuildFingerprint : Fingerprint(
     parameters = listOf(
         "Ljava/util/List;",
         "Lig/b;",
-        "Laq/f$c;",
+        "Laq/f\$c;",
         "Laq/h;",
         "Ljava/util/List;"
     )
