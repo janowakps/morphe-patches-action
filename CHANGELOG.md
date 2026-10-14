@@ -1,3 +1,9 @@
+## [1.0.0-dev.18](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.17...v1.0.0-dev.18) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** localize 'New' section in Weekly Deals Sorting patch description ([dbe38a0](https://github.com/janowakps/morphe-patches-action/commit/dbe38a02fe25f6eafcd956cd432a1a44cb15eba9))
+
 ## [1.0.0-dev.17](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.16...v1.0.0-dev.17) (2026-10-14)
 
 ### 🐛 Bug Fixes
