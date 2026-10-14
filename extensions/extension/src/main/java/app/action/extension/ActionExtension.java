@@ -1,5 +1,7 @@
 package app.action.extension;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -19,16 +21,60 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings({"unused", "unchecked"})
 public final class ActionExtension {
 
-    // 0: Default, 1: Price Ascending (Cena ↑), 2: Discount Descending (% Rabatu ↓)
+    // 0: Default, 1: Price Ascending (Cena ↑), 2: Discount Descending (% Rabatu ↓), 3: Price Descending (Cena ↓)
     public static volatile int sortMode = 0;
 
     public static volatile Object currentViewModel = null;
+
+    private static final String PREF_NAME = "action_morphe_prefs";
+    private static final String KEY_SORT_MODE = "weekly_deals_sort_mode";
+    private static volatile boolean prefsLoaded = false;
 
     private static final AtomicBoolean autoLoadScheduled = new AtomicBoolean(false);
     private static volatile int lastLoadedSize = -1;
     private static volatile int sameSizeRetryCount = 0;
 
     private ActionExtension() {}
+
+    private static Context getAppContext() {
+        try {
+            Class<?> atClass = Class.forName("android.app.ActivityThread");
+            Method currentAppMethod = atClass.getMethod("currentApplication");
+            Object app = currentAppMethod.invoke(null);
+            if (app instanceof Context) {
+                return (Context) app;
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    public static void loadSavedSortMode() {
+        if (prefsLoaded) return;
+        try {
+            Context ctx = getAppContext();
+            if (ctx != null) {
+                SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                sortMode = sp.getInt(KEY_SORT_MODE, 0);
+                prefsLoaded = true;
+                Log.i("ActionExtension", "Loaded saved sortMode: " + sortMode);
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Failed to load saved sortMode", t);
+        }
+    }
+
+    public static void saveSortMode(int mode) {
+        try {
+            Context ctx = getAppContext();
+            if (ctx != null) {
+                SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                sp.edit().putInt(KEY_SORT_MODE, mode).apply();
+                Log.i("ActionExtension", "Saved sortMode: " + mode);
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Failed to save sortMode", t);
+        }
+    }
 
     /**
      * Intercepts the product list before grid building in bq.a0.d.
@@ -39,6 +85,8 @@ public final class ActionExtension {
         if (originalList == null || originalList.size() <= 1) {
             return originalList;
         }
+
+        loadSavedSortMode();
 
         if (sortMode == 0) {
             return originalList;
@@ -55,6 +103,16 @@ public final class ActionExtension {
                         BigDecimal p1 = getPrice(o1);
                         BigDecimal p2 = getPrice(o2);
                         return p1.compareTo(p2);
+                    }
+                });
+            } else if (sortMode == 3) {
+                // Price Descending: highest price first
+                Collections.sort(copy, new Comparator<Object>() {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        BigDecimal p1 = getPrice(o1);
+                        BigDecimal p2 = getPrice(o2);
+                        return p2.compareTo(p1);
                     }
                 });
             } else if (sortMode == 2) {
@@ -443,13 +501,17 @@ public final class ActionExtension {
                 int.class
             );
 
+            loadSavedSortMode();
+
             // Render Chip 1: Default
             Object mod0 = buildChipModifier(sortMode == 0, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
             hMethod.invoke(null, "Domy\u015blnie", sortMode == 0, createOnClickProxy(0, viewModel, cl), mod0, composer, 0);
 
-            // Render Chip 2: Price Ascending
-            Object mod1 = buildChipModifier(sortMode == 1, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
-            hMethod.invoke(null, "Cena \u2191", sortMode == 1, createOnClickProxy(1, viewModel, cl), mod1, composer, 0);
+            // Render Chip 2: Price (Bidirectional: Cena ↑ or Cena ↓)
+            boolean isPriceSelected = (sortMode == 1 || sortMode == 3);
+            String priceLabel = (sortMode == 3) ? "Cena \u2193" : "Cena \u2191";
+            Object mod1 = buildChipModifier(isPriceSelected, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
+            hMethod.invoke(null, priceLabel, isPriceSelected, createOnClickProxy(1, viewModel, cl), mod1, composer, 0);
 
             // Render Chip 3: Discount Descending
             Object mod2 = buildChipModifier(sortMode == 2, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
@@ -495,12 +557,23 @@ public final class ActionExtension {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if ("invoke".equals(method.getName())) {
-                    Log.i("ActionExtension", "Sorting chip clicked: mode=" + mode);
-                    sortMode = mode;
+                    int targetMode = mode;
+                    if (mode == 1) {
+                        // Toggle between Price Ascending (1) and Price Descending (3)
+                        if (sortMode == 1) {
+                            targetMode = 3;
+                        } else {
+                            targetMode = 1;
+                        }
+                    }
+
+                    Log.i("ActionExtension", "Sorting chip clicked: targetMode=" + targetMode + " (prev sortMode=" + sortMode + ")");
+                    sortMode = targetMode;
+                    saveSortMode(targetMode);
                     lastLoadedSize = -1;
                     sameSizeRetryCount = 0;
 
-                    if (mode != 0 && viewModel != null) {
+                    if (targetMode != 0 && viewModel != null) {
                         Object presenter = findActivePresenter(viewModel);
                         if (presenter != null && hasMoreProducts(presenter, 0)) {
                             triggerPresenterLoadMore(presenter);
