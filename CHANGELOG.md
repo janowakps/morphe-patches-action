@@ -1,3 +1,9 @@
+## [1.0.0-dev.19](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.18...v1.0.0-dev.19) (2026-10-14)
+
+### ✨ New Features
+
+* **promotions:** localize sorting chips via native resources and dynamically hide discount chip ([f9f0444](https://github.com/janowakps/morphe-patches-action/commit/f9f044473b81753787ecdb71aa2ab05f35e6dfba))
+
 ## [1.0.0-dev.18](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.17...v1.0.0-dev.18) (2026-10-14)
 
 ### 🐛 Bug Fixes
