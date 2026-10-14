@@ -25,6 +25,9 @@ public final class ActionExtension {
     public static volatile int sortMode = 0;
 
     public static volatile Object currentViewModel = null;
+    public static volatile boolean isWeekDealsActive = false;
+    public static volatile String activeGridName = null;
+    public static volatile Object currentGridPresenter = null;
 
     private static final String PREF_NAME = "action_morphe_prefs";
     private static final String KEY_SORT_MODE = "weekly_deals_sort_mode";
@@ -77,12 +80,56 @@ public final class ActionExtension {
     }
 
     /**
+     * Intercepts the grid context in zp.d.Z to distinguish between Weekly Deals and
+     * screens with native sorting/filtering (e.g. Nowości, Search, Categories).
+     */
+    public static void setCurrentGridContext(String str, Object presenter, Object gridState) {
+        activeGridName = str;
+        currentGridPresenter = presenter;
+
+        boolean isDeals = false;
+        if (str != null) {
+            String lower = str.toLowerCase();
+            if (lower.contains("weekdeal") || lower.contains("week_deal")) {
+                isDeals = true;
+            }
+        }
+
+        // Also verify whether filters are hidden on this gridState
+        if (gridState != null) {
+            try {
+                // zp.f -> field g is boolean hideFilters
+                Field gField = gridState.getClass().getDeclaredField("g");
+                gField.setAccessible(true);
+                boolean hideFilters = gField.getBoolean(gridState);
+                if (!hideFilters) {
+                    // This grid has its own native filter/sort button (like Nowości or Search)!
+                    // Under NO circumstance should we apply our custom sorting chips here.
+                    isDeals = false;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        isWeekDealsActive = isDeals;
+        if (!isDeals) {
+            currentViewModel = null;
+        }
+        Log.i("ActionExtension", "setCurrentGridContext: str=" + str + ", isWeekDealsActive=" + isWeekDealsActive);
+    }
+
+    /**
      * Intercepts the product list before grid building in bq.a0.d.
      * Returns a new sorted list according to active sortMode.
      * When sorting is active, automatically schedules loading of remaining pages.
      */
     public static List<?> sortProductList(List<?> originalList) {
         if (originalList == null || originalList.size() <= 1) {
+            return originalList;
+        }
+
+        // CRITICAL: Only sort if the currently active grid is Weekly Deals!
+        // Never override native sorting or filters on Nowości, Search, or Category pages.
+        if (!isWeekDealsActive) {
             return originalList;
         }
 
@@ -144,7 +191,7 @@ public final class ActionExtension {
      * Automatically triggers loading more products if the active catalog has more pages.
      */
     public static void scheduleAutoLoadIfNecessary(final int currentSize) {
-        if (sortMode == 0 || currentViewModel == null) {
+        if (!isWeekDealsActive || sortMode == 0 || currentViewModel == null) {
             return;
         }
 
@@ -154,7 +201,7 @@ public final class ActionExtension {
                 public void run() {
                     try {
                         Object vm = currentViewModel;
-                        if (vm == null || sortMode == 0) {
+                        if (!isWeekDealsActive || vm == null || sortMode == 0) {
                             return;
                         }
 
@@ -349,6 +396,7 @@ public final class ActionExtension {
     public static void addSortingChips(Object lazyListScope, Object viewModel) {
         if (lazyListScope == null) return;
         currentViewModel = viewModel;
+        isWeekDealsActive = true;
 
         try {
             Log.i("ActionExtension", "addSortingChips called with lazyListScope=" + lazyListScope);
@@ -568,6 +616,7 @@ public final class ActionExtension {
                     }
 
                     Log.i("ActionExtension", "Sorting chip clicked: targetMode=" + targetMode + " (prev sortMode=" + sortMode + ")");
+                    isWeekDealsActive = true;
                     sortMode = targetMode;
                     saveSortMode(targetMode);
                     lastLoadedSize = -1;

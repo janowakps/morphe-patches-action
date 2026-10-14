@@ -23,6 +23,24 @@ object ProductGridBuildFingerprint : Fingerprint(
 )
 
 /**
+ * Fingerprint matching the product grid renderer in zp.d.
+ * Signature: zp.d.Z(h2.h, String, Object, Object)V
+ * Unique strings: "productGridFilterAndSortHeader"
+ * Used to detect whether the active grid is Weekly Deals or a screen with native filters/sorting.
+ */
+object ProductGridScopeFingerprint : Fingerprint(
+    name = "Z",
+    returnType = "V",
+    parameters = listOf(
+        "Lh2/h;",
+        "Ljava/lang/String;",
+        "Ljava/lang/Object;",
+        "Ljava/lang/Object;"
+    ),
+    strings = listOf("productGridFilterAndSortHeader")
+)
+
+/**
  * Fingerprint matching the LazyListScope content builder lambda in de.b.
  * Unique signature with parameter (Object) returning Object,
  * contains the string "weekDealsLeafletShortcut",

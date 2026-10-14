@@ -11,7 +11,7 @@ private const val EXTENSION_CLASS = "Lapp/action/extension/ActionExtension;"
 @Suppress("unused")
 val actionPromotionSortPatch = bytecodePatch(
     name = "Weekly Deals Sorting",
-    description = "Adds bidirectional sorting options with interactive chips, increases initial deals page limit to 120, and fixes badge label clipping.",
+    description = "Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on Nowości and category pages, increases initial deals page limit to 120, and fixes badge label clipping.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_ACTION)
@@ -19,6 +19,16 @@ val actionPromotionSortPatch = bytecodePatch(
     extendWith("extensions/extension.mpe")
 
     execute {
+        // Hook 0: Track active grid context in zp.d.Z to isolate Weekly Deals from Nowości/Search/Categories
+        // Parameters: p1 (v20) = LazyListScope, p2 (v21) = gridName (String), p3 (v22) = presenter, p4 (v23) = gridState (zp.f)
+        val gridScopeMethod = ProductGridScopeFingerprint.method
+        gridScopeMethod.addInstructions(
+            0,
+            """
+                invoke-static/range {p2 .. p4}, $EXTENSION_CLASS->setCurrentGridContext(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V
+            """
+        )
+
         // Hook 1: Product grid sorting at bq.a0.d entry
         // Parameter p0 is register v20 (> 15), so Dalvik format 35c (invoke-static) cannot encode it.
         // Format 3rc (invoke-static/range) must be used.
