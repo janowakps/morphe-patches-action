@@ -1,3 +1,9 @@
+## [1.0.0-dev.6](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** detach labels before reattaching to new instruction ([97ba409](https://github.com/janowakps/morphe-patches-action/commit/97ba4094f38da667ffdbd3f7e864921f1c9a231d))
+
 ## [1.0.0-dev.5](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2026-10-14)
 
 ### 🐛 Bug Fixes
