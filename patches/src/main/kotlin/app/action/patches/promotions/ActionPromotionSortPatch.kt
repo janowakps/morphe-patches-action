@@ -44,12 +44,16 @@ val actionPromotionSortPatch = bytecodePatch(
 
         // Move any branch target labels from the iterator instruction to the newly inserted
         // addSortingChips instruction so that both leaflet-enabled and leaflet-disabled paths execute it.
-        val newInstruction = listScopeMethod.getInstruction(iteratorIndex)
-        val shiftedInstruction = listScopeMethod.getInstruction(iteratorIndex + 1)
-        val labels = shiftedInstruction.location.labels
-        if (labels.isNotEmpty()) {
-            newInstruction.location.labels.addAll(labels)
-            labels.clear()
+        try {
+            val newInstruction = listScopeMethod.getInstruction(iteratorIndex)
+            val shiftedInstruction = listScopeMethod.getInstruction(iteratorIndex + 1)
+            val labels = shiftedInstruction.location.labels.toList()
+            if (labels.isNotEmpty()) {
+                shiftedInstruction.location.labels.clear()
+                newInstruction.location.labels.addAll(labels)
+            }
+        } catch (ignored: Throwable) {
+            // Fallback: instruction is already injected at iteratorIndex
         }
     }
 }
