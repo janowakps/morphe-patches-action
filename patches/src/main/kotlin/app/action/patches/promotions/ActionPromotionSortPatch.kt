@@ -11,7 +11,7 @@ private const val EXTENSION_CLASS = "Lapp/action/extension/ActionExtension;"
 @Suppress("unused")
 val actionPromotionSortPatch = bytecodePatch(
     name = "Weekly Deals Sorting",
-    description = "Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on Nowości and category pages, increases initial deals page limit to 120, and fixes badge label clipping.",
+    description = "Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on 'New' and category pages, increases initial deals page limit to 120, and fixes badge label clipping.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_ACTION)
@@ -19,7 +19,7 @@ val actionPromotionSortPatch = bytecodePatch(
     extendWith("extensions/extension.mpe")
 
     execute {
-        // Hook 0: Track active grid context in zp.d.Z to isolate Weekly Deals from Nowości/Search/Categories
+        // Hook 0: Track active grid context in zp.d.Z to isolate Weekly Deals from 'New'/Search/Categories
         // Parameters: p1 (v20) = LazyListScope, p2 (v21) = gridName (String), p3 (v22) = presenter, p4 (v23) = gridState (zp.f)
         val gridScopeMethod = ProductGridScopeFingerprint.method
         gridScopeMethod.addInstructions(
@@ -71,8 +71,8 @@ val actionPromotionSortPatch = bytecodePatch(
 
         // Hook 3: Dynamic page limit in zp.k.a (WeeklyDealsLimitFingerprint)
         // Uses ActionExtension.onProductFetch at method entry to detect whether the active grid
-        // is Weekly Deals vs Nowości/Categories, and getPageLimit to return 120 for Weekly Deals
-        // (fetching all deals in a single request) and 24 for Nowości/Categories (preserving native pagination).
+        // is Weekly Deals vs 'New'/Categories, and getPageLimit to return 120 for Weekly Deals
+        // (fetching all deals in a single request) and 24 for 'New'/Categories (preserving native pagination).
         val limitMethod = WeeklyDealsLimitFingerprint.method
         val limitMatches = WeeklyDealsLimitFingerprint.instructionMatches
 

@@ -127,7 +127,7 @@ public final class ActionExtension {
     /**
      * Dynamically supplies page limit for zp.k.a queries:
      * - Returns 120 for Weekly Deals to load all deals in a single request.
-     * - Returns 24 for Nowości, Search, and Category pages to preserve continuous native pagination without skipped items.
+     * - Returns 24 for 'New', Search, and Category pages to preserve continuous native pagination without skipped items.
      */
     public static int getPageLimit() {
         if (isWeekDealsActive) {
@@ -138,7 +138,7 @@ public final class ActionExtension {
 
     /**
      * Intercepts the grid context in zp.d.Z to distinguish between Weekly Deals and
-     * screens with native sorting/filtering (e.g. Nowości, Search, Categories).
+     * screens with native sorting/filtering (e.g. 'New', Search, Categories).
      */
     public static void setCurrentGridContext(String str, Object presenter, Object gridState) {
         activeGridName = str;
@@ -168,7 +168,7 @@ public final class ActionExtension {
                 gField.setAccessible(true);
                 boolean hideFilters = gField.getBoolean(gridState);
                 if (!hideFilters) {
-                    // This grid has its own native filter/sort button (like Nowości or Search)!
+                    // This grid has its own native filter/sort button (like 'New' or Search)!
                     // Under NO circumstance should we treat it as Weekly Deals.
                     isDeals = false;
                 }
@@ -193,7 +193,7 @@ public final class ActionExtension {
         }
 
         // CRITICAL: Only sort if the currently active grid is Weekly Deals!
-        // Never override native sorting or filters on Nowości, Search, or Category pages.
+        // Never override native sorting or filters on 'New', Search, or Category pages.
         if (!isWeekDealsActive) {
             return originalList;
         }

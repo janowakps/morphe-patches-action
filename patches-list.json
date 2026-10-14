@@ -70,7 +70,7 @@
     },
     {
       "name": "Weekly Deals Sorting",
-      "description": "Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on Nowości and category pages, increases initial deals page limit to 120, and fixes badge label clipping.",
+      "description": "Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on 'New' and category pages, increases initial deals page limit to 120, and fixes badge label clipping.",
       "default": true,
       "category": null,
       "compatiblePackages": [

@@ -31,7 +31,7 @@ This repository provides a custom patch bundle for Morphe that enables Dark Mode
 |----------|----------------|-----------|
 | [Dark Mode](#dark-mode) | Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette and customer card QR code. |  |
 | [Dark Splash Screen](#dark-splash-screen) | Forces dark window and splash screen backgrounds in styles.xml to eliminate the white flash on app startup. |  |
-| [Weekly Deals Sorting](#weekly-deals-sorting) | Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on Nowości and category pages, increases initial deals page limit to 120, and fixes badge label clipping. |  |
+| [Weekly Deals Sorting](#weekly-deals-sorting) | Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on 'New' and category pages, increases initial deals page limit to 120, and fixes badge label clipping. |  |
 
 </details>
 
