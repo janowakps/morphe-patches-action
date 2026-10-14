@@ -43,11 +43,14 @@ The Action app uses a centralized Jetpack Compose color palette defined and init
 ### Product List Sorting (`bq.a0.d`)
 - Products are held in `java.util.List` passed to `bq.a0.d`.
 - `ActionExtension.sortProductList(List)` intercepts the list and sorts by:
-  - Mode 0: Default (native order)
+  - Mode 0: Default / Relevance (native order)
   - Mode 1: Price Ascending (lowest price first)
-  - Mode 2: Price Descending (highest price first)
-  - Mode 3: Discount Ascending
-  - Mode 4: Discount Descending (deepest discount first)
+  - Mode 2: Discount Descending (deepest discount first, `% ↓`)
+  - Mode 3: Price Descending (highest price first)
+- **Interactive Sorting Chips**:
+  - Chip 1 (Relevance): dynamically pulls native localized string `filter_and_sort_sorting_relevance` from APK resources (e.g. `Polecane` in PL, `Empfohlen` in DE, `Doporučené` in CZ, `Aanbevolen` in NL).
+  - Chip 2 (Price): dynamically pulls native localized string `filter_and_sort_price_title` + direction arrow (`Cena ↑` / `Cena ↓`, `Preis ↑` / `Preis ↓`, `Prijs ↑` / `Prijs ↓`).
+  - Chip 3 (`% ↓`): internationally recognized symbol for discount. **Dynamically hidden** when no products on the active grid/market contain discount percentages (e.g., in Germany or Czech Republic).
 
 ### Deals Pagination Limit (`zp.k.a`)
 - Intercepted by `WeeklyDealsLimitFingerprint`.

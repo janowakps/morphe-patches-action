@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings({"unused", "unchecked"})
 public final class ActionExtension {
 
-    // 0: Default, 1: Price Ascending (Cena ↑), 2: Discount Descending (% Rabatu ↓), 3: Price Descending (Cena ↓)
+    // 0: Default/Relevance, 1: Price Ascending (Price ↑), 2: Discount Descending (% ↓), 3: Price Descending (Price ↓)
     public static volatile int sortMode = 0;
 
     public static volatile Object currentViewModel = null;
@@ -31,7 +31,12 @@ public final class ActionExtension {
 
     private static final String PREF_NAME = "action_morphe_prefs";
     private static final String KEY_SORT_MODE = "weekly_deals_sort_mode";
+    private static final String KEY_HAS_DISCOUNTS = "weekly_deals_has_discounts";
     private static volatile boolean prefsLoaded = false;
+    public static volatile boolean hasDiscounts = true;
+
+    private static volatile String cachedRelevanceLabel = null;
+    private static volatile String cachedPriceLabelBase = null;
 
     private static final AtomicBoolean autoLoadScheduled = new AtomicBoolean(false);
     private static volatile int lastLoadedSize = -1;
@@ -58,8 +63,9 @@ public final class ActionExtension {
             if (ctx != null) {
                 SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
                 sortMode = sp.getInt(KEY_SORT_MODE, 0);
+                hasDiscounts = sp.getBoolean(KEY_HAS_DISCOUNTS, true);
                 prefsLoaded = true;
-                Log.i("ActionExtension", "Loaded saved sortMode: " + sortMode);
+                Log.i("ActionExtension", "Loaded saved sortMode: " + sortMode + ", hasDiscounts: " + hasDiscounts);
             }
         } catch (Throwable t) {
             Log.w("ActionExtension", "Failed to load saved sortMode", t);
@@ -77,6 +83,59 @@ public final class ActionExtension {
         } catch (Throwable t) {
             Log.w("ActionExtension", "Failed to save sortMode", t);
         }
+    }
+
+    public static void saveHasDiscounts(boolean has) {
+        try {
+            Context ctx = getAppContext();
+            if (ctx != null) {
+                SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                sp.edit().putBoolean(KEY_HAS_DISCOUNTS, has).apply();
+                Log.i("ActionExtension", "Saved hasDiscounts: " + has);
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Failed to save hasDiscounts", t);
+        }
+    }
+
+    private static String getRelevanceLabel() {
+        if (cachedRelevanceLabel != null) return cachedRelevanceLabel;
+        try {
+            Context ctx = getAppContext();
+            if (ctx != null) {
+                int resId = ctx.getResources().getIdentifier("filter_and_sort_sorting_relevance", "string", ctx.getPackageName());
+                if (resId != 0) {
+                    String s = ctx.getString(resId);
+                    if (s != null && !s.trim().isEmpty()) {
+                        cachedRelevanceLabel = s;
+                        return s;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Failed to resolve filter_and_sort_sorting_relevance", t);
+        }
+        return "Recommended";
+    }
+
+    private static String getPriceLabelBase() {
+        if (cachedPriceLabelBase != null) return cachedPriceLabelBase;
+        try {
+            Context ctx = getAppContext();
+            if (ctx != null) {
+                int resId = ctx.getResources().getIdentifier("filter_and_sort_price_title", "string", ctx.getPackageName());
+                if (resId != 0) {
+                    String s = ctx.getString(resId);
+                    if (s != null && !s.trim().isEmpty()) {
+                        cachedPriceLabelBase = s;
+                        return s;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Failed to resolve filter_and_sort_price_title", t);
+        }
+        return "Price";
     }
 
     /**
@@ -198,7 +257,33 @@ public final class ActionExtension {
             return originalList;
         }
 
+        // Evaluate whether any product in this list has a discount percentage
+        boolean anyDiscount = false;
+        for (Object item : originalList) {
+            if (getDiscount(item) > 0) {
+                anyDiscount = true;
+                break;
+            }
+        }
+
+        if (hasDiscounts != anyDiscount) {
+            hasDiscounts = anyDiscount;
+            saveHasDiscounts(anyDiscount);
+            if (currentViewModel != null) {
+                try {
+                    Method bMethod = currentViewModel.getClass().getMethod("b");
+                    bMethod.invoke(currentViewModel);
+                } catch (Throwable ignored) {}
+            }
+        }
+
         loadSavedSortMode();
+
+        // If discounts are not available on this market/grid, reset sortMode from 2 (% discount) to 0 (default)
+        if (!hasDiscounts && sortMode == 2) {
+            sortMode = 0;
+            saveSortMode(0);
+        }
 
         if (sortMode == 0) {
             return originalList;
@@ -616,19 +701,24 @@ public final class ActionExtension {
 
             loadSavedSortMode();
 
-            // Render Chip 1: Default
+            // Render Chip 1: Relevance (native Action string e.g. "Polecane", "Empfohlen", "Aanbevolen")
+            String relLabel = getRelevanceLabel();
             Object mod0 = buildChipModifier(sortMode == 0, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
-            hMethod.invoke(null, "Domy\u015blnie", sortMode == 0, createOnClickProxy(0, viewModel, cl), mod0, composer, 0);
+            hMethod.invoke(null, relLabel, sortMode == 0, createOnClickProxy(0, viewModel, cl), mod0, composer, 0);
 
-            // Render Chip 2: Price (Bidirectional: Cena ↑ or Cena ↓)
+            // Render Chip 2: Price (Bidirectional with native Action string e.g. "Cena ↑", "Preis ↓")
             boolean isPriceSelected = (sortMode == 1 || sortMode == 3);
-            String priceLabel = (sortMode == 3) ? "Cena \u2193" : "Cena \u2191";
+            String priceBase = getPriceLabelBase();
+            String priceLabel = (sortMode == 3) ? (priceBase + " \u2193") : (priceBase + " \u2191");
             Object mod1 = buildChipModifier(isPriceSelected, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
             hMethod.invoke(null, priceLabel, isPriceSelected, createOnClickProxy(1, viewModel, cl), mod1, composer, 0);
 
-            // Render Chip 3: Discount Descending
-            Object mod2 = buildChipModifier(sortMode == 2, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
-            hMethod.invoke(null, "% Rabatu \u2193", sortMode == 2, createOnClickProxy(2, viewModel, cl), mod2, composer, 0);
+            // Render Chip 3: Discount Descending (% ↓)
+            // Dynamically hidden if discounts are not present/applicable on this market (e.g. CZ, DE)
+            if (hasDiscounts) {
+                Object mod2 = buildChipModifier(sortMode == 2, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
+                hMethod.invoke(null, "% \u2193", sortMode == 2, createOnClickProxy(2, viewModel, cl), mod2, composer, 0);
+            }
 
             // End Row node
             qMethod.invoke(composer, true);
