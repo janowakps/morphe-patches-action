@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.0.0-dev.12",
+  "version": "1.0.0-dev.13",
   "patches": [
     {
       "name": "Dark Mode",
@@ -70,7 +70,7 @@
     },
     {
       "name": "Weekly Deals Sorting",
-      "description": "Adds bidirectional sorting options with interactive chips, increases initial deals page limit to 120, and fixes badge label clipping.",
+      "description": "Adds bidirectional sorting options with interactive chips for Weekly Deals, keeps native filtering/sorting untouched on Nowości and category pages, increases initial deals page limit to 120, and fixes badge label clipping.",
       "default": true,
       "category": null,
       "compatiblePackages": [

@@ -1,3 +1,9 @@
+## [1.0.0-dev.13](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.12...v1.0.0-dev.13) (2026-10-14)
+
+### ✨ New Features
+
+* isolate custom sorting to weekly deals and preserve native filtering on nowosci ([524d76c](https://github.com/janowakps/morphe-patches-action/commit/524d76cc035165fdad4462f1cf2ee83e93f323b9))
+
 ## [1.0.0-dev.12](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.11...v1.0.0-dev.12) (2026-10-14)
 
 ### ✨ New Features
