@@ -1,3 +1,9 @@
+## [1.0.0-dev.14](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.13...v1.0.0-dev.14) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** fix weekly deals context detection and dynamic PLP pagination limit ([24d0b27](https://github.com/janowakps/morphe-patches-action/commit/24d0b27d7339d4bcf9a8e0339718aae5dc32e80b))
+
 ## [1.0.0-dev.13](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.12...v1.0.0-dev.13) (2026-10-14)
 
 ### ✨ New Features
