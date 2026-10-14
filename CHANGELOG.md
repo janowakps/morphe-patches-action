@@ -1,3 +1,9 @@
+## [1.0.0-dev.17](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.16...v1.0.0-dev.17) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **theme:** fix startup crash and set card tile background A0 to gentle dark gray ([c56edc0](https://github.com/janowakps/morphe-patches-action/commit/c56edc0a5545153488b44097e34b075b97c4ab01))
+
 ## [1.0.0-dev.16](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.15...v1.0.0-dev.16) (2026-10-14)
 
 ### 🐛 Bug Fixes
