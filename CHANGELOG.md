@@ -1,3 +1,9 @@
+## [1.0.0-dev.2](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **theme:** improve contrast for darkBlue, banners, and surface containers ([35b303c](https://github.com/janowakps/morphe-patches-action/commit/35b303c5043b4897c3a27f6bb70e48d0240e923a))
+
 ## 1.0.0-dev.1 (2026-10-14)
 
 ### 🐛 Bug Fixes
