@@ -1,3 +1,9 @@
+## [1.0.0-dev.4](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **theme:** narrow QR fingerprint to gz.q7.b and use safe in-place register replacement ([895d2e1](https://github.com/janowakps/morphe-patches-action/commit/895d2e1056674ae7a35b118aab06a969725b37ca))
+
 ## [1.0.0-dev.3](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2026-10-14)
 
 ### 🐛 Bug Fixes
