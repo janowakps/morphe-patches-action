@@ -14,10 +14,12 @@ private data class ColorOverride(
 @Suppress("unused")
 val actionDarkModePatch = bytecodePatch(
     name = "Dark Mode",
-    description = "Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette and customer card QR code.",
+    description = "Forces dark mode throughout the Action app by overriding the core Jetpack Compose color palette, product photo backgrounds, and customer card QR code.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_ACTION)
+
+    extendWith("extensions/extension.mpe")
 
     execute {
         val returnIndex = PaletteClinitFingerprint.instructionMatches.last().index
@@ -132,5 +134,36 @@ val actionDarkModePatch = bytecodePatch(
 
         // Force foreground color parameter (p1) to solid black (0xFF000000) at method entry
         qrMethod.addInstructions(0, "const/high16 p1, -0x1000000")
+
+        // Hook Compose Image in hg.c.a:
+        // Applies a gentle dark gray (#2E2E2E) rounded background and clipping to product photos
+        // so transparent product PNGs are clearly visible against the dark card surface.
+        val imgMethod = ProductImageComposableFingerprint.method
+        val imgBgSmali = """
+            move-object v0, p0
+            invoke-static {v0}, Lapp/action/extension/ActionExtension;->isProductImage(Ljava/lang/Object;)Z
+            move-result v0
+            if-nez v0, :cond_skip_product_bg
+
+            move-object v3, p2
+            if-nez v3, :cond_skip_product_bg
+
+            sget-wide v0, Lapp/action/extension/ActionExtension;->productImageBackgroundColor:J
+            invoke-static {v0, v1}, Lh4/e0;->e(J)J
+            move-result-wide v0
+
+            const/high16 v2, 0x41000000
+            invoke-static {v2}, Ln2/e;->b(F)Ln2/d;
+            move-result-object v2
+
+            invoke-static {v3, v0, v1, v2}, Ly1/n;->g(La4/s;JLh4/t0;)La4/s;
+            move-result-object v3
+            invoke-static {v3, v2}, Le4/h;->b(La4/s;Lh4/t0;)La4/s;
+            move-result-object p2
+
+            :cond_skip_product_bg
+        """.trimIndent()
+        imgMethod.addInstructions(0, imgBgSmali)
     }
 }
+

@@ -830,4 +830,27 @@ public final class ActionExtension {
         } catch (Throwable ignored) {}
         return 0;
     }
+
+    // Default product image container background color: gentle dark gray (#2E2E2E)
+    public static volatile long productImageBackgroundColor = 0x00000000ff2e2e2eL;
+
+    /**
+     * Determines whether the given image object (Uri or String) corresponds to a product photo,
+     * as opposed to a landscape/portrait news banner or flyer.
+     */
+    public static boolean isProductImage(Object obj) {
+        if (obj == null) {
+            return true;
+        }
+        String s = obj.toString();
+        if (s == null || s.isEmpty()) {
+            return true;
+        }
+        // Exclude landscape banners and portrait flyers from having product card background
+        if (s.contains("digital_landscape") || s.contains("digital_portrait")) {
+            return false;
+        }
+        return true;
+    }
 }
+
