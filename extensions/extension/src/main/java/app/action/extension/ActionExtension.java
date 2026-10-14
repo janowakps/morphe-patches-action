@@ -43,12 +43,15 @@ public final class ActionExtension {
                 });
             } else if (sortMode == 2) {
                 // Discount Descending: highest discount percentage first
+                // Secondary sort: lowest price first
                 Collections.sort(copy, new Comparator<Object>() {
                     @Override
                     public int compare(Object o1, Object o2) {
                         int d1 = getDiscount(o1);
                         int d2 = getDiscount(o2);
-                        return Integer.compare(d2, d1);
+                        int cmp = Integer.compare(d2, d1);
+                        if (cmp != 0) return cmp;
+                        return getPrice(o1).compareTo(getPrice(o2));
                     }
                 });
             }
@@ -122,16 +125,16 @@ public final class ActionExtension {
             Field sField = g0Class.getField("S");
             Field tField = g0Class.getField("T");
 
-            // Row measure policy: e2.z.a(e2.j.c, a4.b.n, composer, 48)
-            Method zaMethod = cl.loadClass("e2.z").getMethod("a",
-                cl.loadClass("e2.i"),
-                cl.loadClass("a4.c"),
+            // Row measure policy: e2.k2.a(e2.j.e, a4.b.j, composer, 0)
+            Method kaMethod = cl.loadClass("e2.k2").getMethod("a",
+                cl.loadClass("e2.g"),
+                cl.loadClass("a4.d"),
                 cl.loadClass("k3.j"),
                 int.class
             );
-            Object arrangementCenter = cl.loadClass("e2.j").getField("c").get(null);
-            Object alignmentCenter = cl.loadClass("a4.b").getField("n").get(null);
-            Object measurePolicy = zaMethod.invoke(null, arrangementCenter, alignmentCenter, composer, 48);
+            Object arrangementCenter = cl.loadClass("e2.j").getField("e").get(null);
+            Object alignmentCenterVertically = cl.loadClass("a4.b").getField("j").get(null);
+            Object measurePolicy = kaMethod.invoke(null, arrangementCenter, alignmentCenterVertically, composer, 0);
 
             // Setters in z4.g
             Class<?> z4gClass = cl.loadClass("z4.g");
@@ -142,14 +145,17 @@ public final class ActionExtension {
             Object onNodeSetter = z4gClass.getField("h").get(null);
             Object modifierSetter = z4gClass.getField("d").get(null);
 
-            // Row Modifier: a4.p.b with padding
+            // Row Modifier: fillMaxWidth with 8dp vertical padding
             Class<?> pClass = cl.loadClass("a4.p");
             Object baseModifier = pClass.getField("b").get(null);
 
             Class<?> e2dClass = cl.loadClass("e2.d");
             Method padMethod = e2dClass.getMethod("E", cl.loadClass("a4.s"), float.class, float.class);
-            // 8dp horizontal, 4dp vertical on the row container
-            Object rowModifier = padMethod.invoke(null, baseModifier, 8.0f, 4.0f);
+
+            Class<?> q2Class = cl.loadClass("e2.q2");
+            Method fillMaxWidthMethod = q2Class.getMethod("d", cl.loadClass("a4.s"), float.class);
+            Object fullWidthModifier = fillMaxWidthMethod.invoke(null, baseModifier, 1.0f);
+            Object rowModifier = padMethod.invoke(null, fullWidthModifier, 0.0f, 8.0f);
 
             Method materializeMethod = cl.loadClass("a4.a").getMethod("c", cl.loadClass("a4.s"), cl.loadClass("k3.j"));
             Object materializedModifier = materializeMethod.invoke(null, rowModifier, composer);
@@ -177,7 +183,34 @@ public final class ActionExtension {
             yMethod.invoke(null, composer, onNodeSetter);
             cMethod.invoke(null, materializedModifier, composer, modifierSetter);
 
-            // Render each chip using fz.ec.h(String, boolean, yb0.a, a4.s, k3.j, int)
+            // Resolve palette colors (with dark mode defaults)
+            long selectedBgColor = 0xFF5C9CFFL;   // darkBlue500
+            long unselectedBgColor = 0xFF1E1E1EL; // neutral50
+            long borderColor = 0xFF484848L;       // neutral300
+            try {
+                Object palette = cl.loadClass("ai.a").getMethod("a", cl.loadClass("k3.j")).invoke(null, composer);
+                Class<?> paletteClass = palette.getClass();
+                selectedBgColor = paletteClass.getField("l").getLong(palette);
+                unselectedBgColor = paletteClass.getField("c").getLong(palette);
+                borderColor = paletteClass.getField("d").getLong(palette);
+            } catch (Throwable t) {
+                android.util.Log.w("ActionExtension", "Failed to resolve palette colors, using fallbacks", t);
+            }
+
+            // Resolve shape and modifier methods
+            Object circleShape = null;
+            Method bgMethod = null;
+            Method borderMethod = null;
+            try {
+                circleShape = cl.loadClass("n2.e").getField("a").get(null);
+                Class<?> y1nClass = cl.loadClass("y1.n");
+                bgMethod = y1nClass.getMethod("g", cl.loadClass("a4.s"), long.class, cl.loadClass("h4.t0"));
+                borderMethod = y1nClass.getMethod("h", cl.loadClass("a4.s"), float.class, long.class, cl.loadClass("h4.t0"));
+            } catch (Throwable t) {
+                android.util.Log.w("ActionExtension", "Failed to resolve shape / bg / border methods", t);
+            }
+
+            // Method fz.ec.h(String, boolean, yb0.a, a4.s, k3.j, int)
             Method hMethod = cl.loadClass("fz.ec").getMethod("h",
                 String.class,
                 boolean.class,
@@ -187,23 +220,46 @@ public final class ActionExtension {
                 int.class
             );
 
-            // Individual chip padding: 4dp horizontal
-            Object chipModifier = padMethod.invoke(null, baseModifier, 4.0f, 0.0f);
+            // Render Chip 1: Default
+            Object mod0 = buildChipModifier(sortMode == 0, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
+            hMethod.invoke(null, "Domy\u015blnie", sortMode == 0, createOnClickProxy(0, viewModel, cl), mod0, composer, 0);
 
-            // Chip 1: Default
-            hMethod.invoke(null, "Domy\u015blnie", sortMode == 0, createOnClickProxy(0, viewModel, cl), chipModifier, composer, 0);
+            // Render Chip 2: Price Ascending
+            Object mod1 = buildChipModifier(sortMode == 1, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
+            hMethod.invoke(null, "Cena \u2191", sortMode == 1, createOnClickProxy(1, viewModel, cl), mod1, composer, 0);
 
-            // Chip 2: Price Ascending
-            hMethod.invoke(null, "Cena \u2191", sortMode == 1, createOnClickProxy(1, viewModel, cl), chipModifier, composer, 0);
-
-            // Chip 3: Discount Descending
-            hMethod.invoke(null, "% Rabatu \u2193", sortMode == 2, createOnClickProxy(2, viewModel, cl), chipModifier, composer, 0);
+            // Render Chip 3: Discount Descending
+            Object mod2 = buildChipModifier(sortMode == 2, baseModifier, padMethod, bgMethod, borderMethod, circleShape, selectedBgColor, unselectedBgColor, borderColor);
+            hMethod.invoke(null, "% Rabatu \u2193", sortMode == 2, createOnClickProxy(2, viewModel, cl), mod2, composer, 0);
 
             // End Row node
             qMethod.invoke(composer, true);
             android.util.Log.i("ActionExtension", "renderChips completed successfully");
         } catch (Throwable t) {
             android.util.Log.e("ActionExtension", "Error in renderChips", t);
+        }
+    }
+
+    private static Object buildChipModifier(boolean isSelected, Object baseModifier, Method padMethod, Method bgMethod, Method borderMethod, Object circleShape, long selectedBg, long unselectedBg, long borderCol) {
+        try {
+            // 4dp outer horizontal margin between chips
+            Object mod = padMethod.invoke(null, baseModifier, 4.0f, 0.0f);
+            if (circleShape != null && bgMethod != null) {
+                if (isSelected) {
+                    // Filled pill background with primary brand color (darkBlue500)
+                    mod = bgMethod.invoke(null, mod, selectedBg, circleShape);
+                } else {
+                    // Subtle container background with 1dp border
+                    mod = bgMethod.invoke(null, mod, unselectedBg, circleShape);
+                    if (borderMethod != null) {
+                        mod = borderMethod.invoke(null, mod, 1.0f, borderCol, circleShape);
+                    }
+                }
+            }
+            return mod;
+        } catch (Throwable t) {
+            android.util.Log.w("ActionExtension", "Failed to build chip modifier", t);
+            return baseModifier;
         }
     }
 
@@ -223,7 +279,17 @@ public final class ActionExtension {
                             Method bMethod = viewModel.getClass().getMethod("b");
                             bMethod.invoke(viewModel);
                         } catch (Throwable t) {
-                            android.util.Log.e("ActionExtension", "Failed to trigger viewModel refresh", t);
+                            try {
+                                for (Method m : viewModel.getClass().getMethods()) {
+                                    if ("b".equals(m.getName()) && m.getParameterTypes().length == 0) {
+                                        m.setAccessible(true);
+                                        m.invoke(viewModel);
+                                        break;
+                                    }
+                                }
+                            } catch (Throwable t2) {
+                                android.util.Log.e("ActionExtension", "Failed to trigger viewModel refresh", t2);
+                            }
                         }
                     }
                     return unitInstance;
