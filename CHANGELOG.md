@@ -1,3 +1,9 @@
+## [1.0.0-dev.16](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.15...v1.0.0-dev.16) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **theme:** delegate product image modifier wrapping to safe extension method to prevent VerifyError ([8da3daa](https://github.com/janowakps/morphe-patches-action/commit/8da3daafd9f0e819bd79a121afee400a4844c1e5))
+
 ## [1.0.0-dev.15](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.14...v1.0.0-dev.15) (2026-10-14)
 
 ### ✨ New Features
