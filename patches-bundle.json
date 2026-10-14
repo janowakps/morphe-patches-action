@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-14T12:46:07",
-  "description": "## [1.0.0-dev.7](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-10-14)\n\n### 🐛 Bug Fixes\n\n* **promotions:** use invoke-static/range for parameter register p0 ([40bf748](https://github.com/janowakps/morphe-patches-action/commit/40bf74887a919bdd1ee639abde53842d23586913))",
-  "download_url": "https://github.com/janowakps/morphe-patches-action/releases/download/v1.0.0-dev.7/patches-1.0.0-dev.7.mpp",
+  "created_at": "2026-10-14T13:03:46",
+  "description": "## [1.0.0-dev.8](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-10-14)\n\n### 🐛 Bug Fixes\n\n* **promotions:** fix u3.c constructor argument order and row measure policy ([9339022](https://github.com/janowakps/morphe-patches-action/commit/933902298809c2e1a690a86e6955af857cf6776e))",
+  "download_url": "https://github.com/janowakps/morphe-patches-action/releases/download/v1.0.0-dev.8/patches-1.0.0-dev.8.mpp",
   "signature_download_url": "",
-  "version": "1.0.0-dev.7"
+  "version": "1.0.0-dev.8"
 }

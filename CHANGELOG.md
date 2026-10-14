@@ -1,3 +1,9 @@
+## [1.0.0-dev.8](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-10-14)
+
+### 🐛 Bug Fixes
+
+* **promotions:** fix u3.c constructor argument order and row measure policy ([9339022](https://github.com/janowakps/morphe-patches-action/commit/933902298809c2e1a690a86e6955af857cf6776e))
+
 ## [1.0.0-dev.7](https://github.com/janowakps/morphe-patches-action/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-10-14)
 
 ### 🐛 Bug Fixes
