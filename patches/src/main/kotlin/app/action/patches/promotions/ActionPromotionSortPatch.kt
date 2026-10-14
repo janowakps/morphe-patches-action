@@ -69,13 +69,28 @@ val actionPromotionSortPatch = bytecodePatch(
             // Fallback: instruction is already injected at iteratorIndex
         }
 
-        // Hook 3: Expand page limit from 24 to 120 in zp.k.a (WeeklyDealsLimitFingerprint)
-        // Fetches all weekly deals (~50-80 products) in a single request, eliminating manual pagination.
+        // Hook 3: Dynamic page limit in zp.k.a (WeeklyDealsLimitFingerprint)
+        // Uses ActionExtension.onProductFetch at method entry to detect whether the active grid
+        // is Weekly Deals vs Nowości/Categories, and getPageLimit to return 120 for Weekly Deals
+        // (fetching all deals in a single request) and 24 for Nowości/Categories (preserving native pagination).
         val limitMethod = WeeklyDealsLimitFingerprint.method
         val limitMatches = WeeklyDealsLimitFingerprint.instructionMatches
+
+        limitMethod.addInstructions(
+            0,
+            """
+                invoke-static {p0}, $EXTENSION_CLASS->onProductFetch(Ljava/lang/Object;)V
+            """
+        )
+
         if (limitMatches.size >= 2) {
-            limitMethod.replaceInstruction(limitMatches[0].index, "const/16 v3, 120")
-            limitMethod.replaceInstruction(limitMatches[1].index, "const/16 v3, 120")
+            val idx0 = limitMatches[0].index + 1
+            limitMethod.replaceInstruction(idx0, "invoke-static {}, $EXTENSION_CLASS->getPageLimit()I")
+            limitMethod.addInstructions(idx0 + 1, "move-result v3")
+
+            val idx1 = limitMatches[1].index + 2
+            limitMethod.replaceInstruction(idx1, "invoke-static {}, $EXTENSION_CLASS->getPageLimit()I")
+            limitMethod.addInstructions(idx1 + 1, "move-result v3")
         }
 
         // Hook 4: Fix "Promocja tygodnia" badge vertical truncation in ur.h.f

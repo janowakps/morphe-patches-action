@@ -80,6 +80,63 @@ public final class ActionExtension {
     }
 
     /**
+     * Inspects the presenter (zp.k) or any component to determine if it belongs to Weekly Deals.
+     * In the Action app, Weekly Deals presenter zp.k contains f55447c (el.n) -> f17676a (el.k),
+     * where trackingName is "Weekdeals" or "NextWeekdeals", and data contains "plp_weekdeals".
+     */
+    public static boolean isWeeklyDealsPresenter(Object presenter) {
+        if (presenter == null) return false;
+        try {
+            String pStr = presenter.toString();
+            if (pStr != null) {
+                String lower = pStr.toLowerCase();
+                if (lower.contains("weekdeal") || lower.contains("plp_weekdeals")) {
+                    return true;
+                }
+            }
+
+            for (Field f : presenter.getClass().getDeclaredFields()) {
+                f.setAccessible(true);
+                Object val = f.get(presenter);
+                if (val != null) {
+                    String vStr = val.toString();
+                    if (vStr != null) {
+                        String lower = vStr.toLowerCase();
+                        if (lower.contains("weekdeal") || lower.contains("plp_weekdeals")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Error inspecting presenter", t);
+        }
+        return false;
+    }
+
+    /**
+     * Intercepts product fetch start at zp.k.a entry to immediately set the grid context
+     * before page limits or GraphQL requests are made.
+     */
+    public static void onProductFetch(Object presenter) {
+        boolean isDeals = isWeeklyDealsPresenter(presenter);
+        isWeekDealsActive = isDeals;
+        Log.i("ActionExtension", "onProductFetch: isWeeklyDeals=" + isDeals);
+    }
+
+    /**
+     * Dynamically supplies page limit for zp.k.a queries:
+     * - Returns 120 for Weekly Deals to load all deals in a single request.
+     * - Returns 24 for Nowości, Search, and Category pages to preserve continuous native pagination without skipped items.
+     */
+    public static int getPageLimit() {
+        if (isWeekDealsActive) {
+            return 120;
+        }
+        return 24;
+    }
+
+    /**
      * Intercepts the grid context in zp.d.Z to distinguish between Weekly Deals and
      * screens with native sorting/filtering (e.g. Nowości, Search, Categories).
      */
@@ -87,10 +144,18 @@ public final class ActionExtension {
         activeGridName = str;
         currentGridPresenter = presenter;
 
-        boolean isDeals = false;
-        if (str != null) {
+        boolean isDeals = isWeeklyDealsPresenter(presenter);
+
+        if (!isDeals && str != null) {
             String lower = str.toLowerCase();
-            if (lower.contains("weekdeal") || lower.contains("week_deal")) {
+            if (lower.contains("weekdeal") || lower.contains("plp_weekdeals")) {
+                isDeals = true;
+            }
+        }
+
+        if (!isDeals && currentViewModel != null) {
+            String vmName = currentViewModel.getClass().getName();
+            if (vmName.contains("WeekDealsViewModel") || vmName.contains("weekdeals")) {
                 isDeals = true;
             }
         }
@@ -104,7 +169,7 @@ public final class ActionExtension {
                 boolean hideFilters = gField.getBoolean(gridState);
                 if (!hideFilters) {
                     // This grid has its own native filter/sort button (like Nowości or Search)!
-                    // Under NO circumstance should we apply our custom sorting chips here.
+                    // Under NO circumstance should we treat it as Weekly Deals.
                     isDeals = false;
                 }
             } catch (Throwable ignored) {}
@@ -114,7 +179,7 @@ public final class ActionExtension {
         if (!isDeals) {
             currentViewModel = null;
         }
-        Log.i("ActionExtension", "setCurrentGridContext: str=" + str + ", isWeekDealsActive=" + isWeekDealsActive);
+        Log.i("ActionExtension", "setCurrentGridContext: str=" + str + ", isDeals=" + isDeals + ", isWeekDealsActive=" + isWeekDealsActive);
     }
 
     /**
