@@ -1,5 +1,8 @@
 package app.action.extension;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -10,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings({"unused", "unchecked"})
 public final class ActionExtension {
@@ -17,14 +22,25 @@ public final class ActionExtension {
     // 0: Default, 1: Price Ascending (Cena ↑), 2: Discount Descending (% Rabatu ↓)
     public static volatile int sortMode = 0;
 
+    public static volatile Object currentViewModel = null;
+
+    private static final AtomicBoolean autoLoadScheduled = new AtomicBoolean(false);
+    private static volatile int lastLoadedSize = -1;
+    private static volatile int sameSizeRetryCount = 0;
+
     private ActionExtension() {}
 
     /**
      * Intercepts the product list before grid building in bq.a0.d.
      * Returns a new sorted list according to active sortMode.
+     * When sorting is active, automatically schedules loading of remaining pages.
      */
     public static List<?> sortProductList(List<?> originalList) {
-        if (originalList == null || originalList.size() <= 1 || sortMode == 0) {
+        if (originalList == null || originalList.size() <= 1) {
+            return originalList;
+        }
+
+        if (sortMode == 0) {
             return originalList;
         }
 
@@ -56,10 +72,216 @@ public final class ActionExtension {
                 });
             }
 
+            // Check if there are more products to auto-load
+            scheduleAutoLoadIfNecessary(copy.size());
+
             return copy;
         } catch (Throwable t) {
-            t.printStackTrace();
+            Log.e("ActionExtension", "Error in sortProductList", t);
             return originalList;
+        }
+    }
+
+    /**
+     * Automatically triggers loading more products if the active catalog has more pages.
+     */
+    public static void scheduleAutoLoadIfNecessary(final int currentSize) {
+        if (sortMode == 0 || currentViewModel == null) {
+            return;
+        }
+
+        if (autoLoadScheduled.compareAndSet(false, true)) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Object vm = currentViewModel;
+                        if (vm == null || sortMode == 0) {
+                            return;
+                        }
+
+                        Object presenter = findActivePresenter(vm);
+                        if (presenter != null && hasMoreProducts(presenter, currentSize)) {
+                            if (currentSize == lastLoadedSize) {
+                                sameSizeRetryCount++;
+                            } else {
+                                lastLoadedSize = currentSize;
+                                sameSizeRetryCount = 0;
+                            }
+
+                            if (sameSizeRetryCount < 3) {
+                                triggerPresenterLoadMore(presenter);
+                            } else {
+                                Log.w("ActionExtension", "Max retries reached for size " + currentSize + ", stopping auto-load");
+                            }
+                        }
+                    } catch (Throwable t) {
+                        Log.e("ActionExtension", "Error in auto-load run", t);
+                    } finally {
+                        autoLoadScheduled.set(false);
+                    }
+                }
+            }, 150);
+        }
+    }
+
+    /**
+     * Resolves the active presenter (zp.k) from WeekDealsViewModel for the selected tab.
+     */
+    public static Object findActivePresenter(Object viewModel) {
+        if (viewModel == null) return null;
+        try {
+            // Step 1: Check if active tab is NEXT_WEEKDEALS
+            boolean isNext = false;
+            try {
+                for (Field f : viewModel.getClass().getDeclaredFields()) {
+                    f.setAccessible(true);
+                    Object val = f.get(viewModel);
+                    if (val != null) {
+                        try {
+                            Method getValue = val.getClass().getMethod("getValue");
+                            Object v = getValue.invoke(val);
+                            if (v != null && v.toString().contains("NEXT_WEEKDEALS")) {
+                                isNext = true;
+                                break;
+                            }
+                        } catch (NoSuchMethodException ignored) {}
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w("ActionExtension", "Failed to check active tab enum", t);
+            }
+
+            // Step 2: Collect resolvers (dl.c)
+            List<Object> resolvers = new ArrayList<>();
+            for (Field f : viewModel.getClass().getDeclaredFields()) {
+                f.setAccessible(true);
+                Object val = f.get(viewModel);
+                if (val != null && "dl.c".equals(val.getClass().getName())) {
+                    resolvers.add(val);
+                }
+            }
+
+            List<Object> candidateResolvers = new ArrayList<>();
+            if (isNext && resolvers.size() > 1) {
+                candidateResolvers.add(resolvers.get(1));
+                candidateResolvers.add(resolvers.get(0));
+            } else {
+                candidateResolvers.addAll(resolvers);
+            }
+
+            // Step 3: From candidate resolvers, find the presenter having method J0()
+            for (Object resolver : candidateResolvers) {
+                for (Field f : resolver.getClass().getDeclaredFields()) {
+                    f.setAccessible(true);
+                    Object val = f.get(resolver);
+                    if (val instanceof Map) {
+                        Map<?, ?> map = (Map<?, ?>) val;
+                        for (Object entry : map.values()) {
+                            if (entry == null) continue;
+                            for (Field ef : entry.getClass().getDeclaredFields()) {
+                                ef.setAccessible(true);
+                                Object compObj = ef.get(entry);
+                                if (compObj != null) {
+                                    try {
+                                        compObj.getClass().getMethod("J0");
+                                        return compObj;
+                                    } catch (NoSuchMethodException ignored) {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.e("ActionExtension", "Error finding active presenter", t);
+        }
+        return null;
+    }
+
+    /**
+     * Checks if the presenter still has unreached products.
+     */
+    public static boolean hasMoreProducts(Object presenter, int currentSize) {
+        if (presenter == null) return false;
+        try {
+            // Check if already loading
+            for (Field f : presenter.getClass().getDeclaredFields()) {
+                f.setAccessible(true);
+                Object val = f.get(presenter);
+                if (val != null) {
+                    try {
+                        Method getValue = val.getClass().getMethod("getValue");
+                        Object v = getValue.invoke(val);
+                        if (v instanceof Boolean && ((Boolean) v).booleanValue()) {
+                            // Currently loading
+                            return false;
+                        }
+                    } catch (NoSuchMethodException ignored) {}
+                }
+            }
+
+            // Check kr.b state via d()
+            Method dMethod = null;
+            try {
+                dMethod = presenter.getClass().getMethod("d");
+            } catch (NoSuchMethodException ignored) {}
+
+            if (dMethod != null) {
+                Object state = dMethod.invoke(presenter);
+                if (state != null) {
+                    List<Field> intFields = new ArrayList<>();
+                    for (Field f : state.getClass().getDeclaredFields()) {
+                        if (f.getType() == int.class) {
+                            f.setAccessible(true);
+                            intFields.add(f);
+                        }
+                    }
+                    if (intFields.size() >= 3) {
+                        int totalCount = intFields.get(0).getInt(state);
+                        int currentPage = intFields.get(1).getInt(state);
+                        int totalPages = intFields.get(2).getInt(state);
+
+                        Log.i("ActionExtension", "Pagination check: currentSize=" + currentSize +
+                                ", totalCount=" + totalCount + ", currentPage=" + currentPage + ", totalPages=" + totalPages);
+
+                        if (totalCount > 0 && currentSize < totalCount) {
+                            return true;
+                        }
+                        if (totalPages > 1 && currentPage < totalPages - 1) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w("ActionExtension", "Failed to check hasMoreProducts", t);
+        }
+        return false;
+    }
+
+    /**
+     * Invokes J0() on the presenter to fetch the next page of products.
+     */
+    public static void triggerPresenterLoadMore(Object presenter) {
+        if (presenter == null) return;
+        try {
+            Log.i("ActionExtension", "Invoking presenter.J0()");
+            Method j0 = presenter.getClass().getMethod("J0");
+            j0.invoke(presenter);
+        } catch (Throwable t) {
+            try {
+                for (Method m : presenter.getClass().getMethods()) {
+                    if ("J0".equals(m.getName()) && m.getParameterTypes().length == 0) {
+                        m.setAccessible(true);
+                        m.invoke(presenter);
+                        return;
+                    }
+                }
+            } catch (Throwable t2) {
+                Log.e("ActionExtension", "Failed to invoke J0 on presenter", t2);
+            }
         }
     }
 
@@ -68,9 +290,10 @@ public final class ActionExtension {
      */
     public static void addSortingChips(Object lazyListScope, Object viewModel) {
         if (lazyListScope == null) return;
+        currentViewModel = viewModel;
 
         try {
-            android.util.Log.i("ActionExtension", "addSortingChips called with lazyListScope=" + lazyListScope);
+            Log.i("ActionExtension", "addSortingChips called with lazyListScope=" + lazyListScope);
             ClassLoader cl = lazyListScope.getClass().getClassLoader();
             Class<?> hClass = cl.loadClass("h2.h");
             Class<?> pClass = cl.loadClass("yb0.p");
@@ -104,9 +327,9 @@ public final class ActionExtension {
 
             Method aMethod = o00aClass.getMethod("a", hClass, Object.class, Object.class, pClass);
             aMethod.invoke(null, lazyListScope, "action_sorting_chips", "action_sorting_chips", composableLambda);
-            android.util.Log.i("ActionExtension", "addSortingChips successfully registered item into LazyListScope");
+            Log.i("ActionExtension", "addSortingChips successfully registered item into LazyListScope");
         } catch (Throwable t) {
-            android.util.Log.e("ActionExtension", "Error in addSortingChips", t);
+            Log.e("ActionExtension", "Error in addSortingChips", t);
         }
     }
 
@@ -115,7 +338,7 @@ public final class ActionExtension {
      */
     private static void renderChips(Object composer, Object viewModel, ClassLoader cl) {
         try {
-            android.util.Log.i("ActionExtension", "renderChips started");
+            Log.i("ActionExtension", "renderChips started");
             Class<?> g0Class = composer.getClass();
             Method d0Method = g0Class.getMethod("d0");
             Method lMethod = g0Class.getMethod("l", cl.loadClass("yb0.a"));
@@ -194,7 +417,7 @@ public final class ActionExtension {
                 unselectedBgColor = paletteClass.getField("c").getLong(palette);
                 borderColor = paletteClass.getField("d").getLong(palette);
             } catch (Throwable t) {
-                android.util.Log.w("ActionExtension", "Failed to resolve palette colors, using fallbacks", t);
+                Log.w("ActionExtension", "Failed to resolve palette colors, using fallbacks", t);
             }
 
             // Resolve shape and modifier methods
@@ -207,7 +430,7 @@ public final class ActionExtension {
                 bgMethod = y1nClass.getMethod("g", cl.loadClass("a4.s"), long.class, cl.loadClass("h4.t0"));
                 borderMethod = y1nClass.getMethod("h", cl.loadClass("a4.s"), float.class, long.class, cl.loadClass("h4.t0"));
             } catch (Throwable t) {
-                android.util.Log.w("ActionExtension", "Failed to resolve shape / bg / border methods", t);
+                Log.w("ActionExtension", "Failed to resolve shape / bg / border methods", t);
             }
 
             // Method fz.ec.h(String, boolean, yb0.a, a4.s, k3.j, int)
@@ -234,9 +457,9 @@ public final class ActionExtension {
 
             // End Row node
             qMethod.invoke(composer, true);
-            android.util.Log.i("ActionExtension", "renderChips completed successfully");
+            Log.i("ActionExtension", "renderChips completed successfully");
         } catch (Throwable t) {
-            android.util.Log.e("ActionExtension", "Error in renderChips", t);
+            Log.e("ActionExtension", "Error in renderChips", t);
         }
     }
 
@@ -258,7 +481,7 @@ public final class ActionExtension {
             }
             return mod;
         } catch (Throwable t) {
-            android.util.Log.w("ActionExtension", "Failed to build chip modifier", t);
+            Log.w("ActionExtension", "Failed to build chip modifier", t);
             return baseModifier;
         }
     }
@@ -272,8 +495,18 @@ public final class ActionExtension {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if ("invoke".equals(method.getName())) {
-                    android.util.Log.i("ActionExtension", "Sorting chip clicked: mode=" + mode);
+                    Log.i("ActionExtension", "Sorting chip clicked: mode=" + mode);
                     sortMode = mode;
+                    lastLoadedSize = -1;
+                    sameSizeRetryCount = 0;
+
+                    if (mode != 0 && viewModel != null) {
+                        Object presenter = findActivePresenter(viewModel);
+                        if (presenter != null && hasMoreProducts(presenter, 0)) {
+                            triggerPresenterLoadMore(presenter);
+                        }
+                    }
+
                     if (viewModel != null) {
                         try {
                             Method bMethod = viewModel.getClass().getMethod("b");
@@ -288,7 +521,7 @@ public final class ActionExtension {
                                     }
                                 }
                             } catch (Throwable t2) {
-                                android.util.Log.e("ActionExtension", "Failed to trigger viewModel refresh", t2);
+                                Log.e("ActionExtension", "Failed to trigger viewModel refresh", t2);
                             }
                         }
                     }
