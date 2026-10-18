@@ -39,4 +39,18 @@ object QrCodeBitmapFingerprint : Fingerprint(
     )
 )
 
+/**
+ * Fingerprint matching the Jetpack Compose Material 3 DropdownMenu composable (g3.l.a).
+ * Matches the unique restart group key (1725609375 / 0x66dd6d3f) and the fallback containerColor move-result-wide.
+ */
+object DropdownMenuFingerprint : Fingerprint(
+    name = "a",
+    accessFlags = listOf(AccessFlags.STATIC, AccessFlags.FINAL),
+    returnType = "V",
+    filters = listOf(
+        literal(1725609375),
+        opcode(Opcode.MOVE_RESULT_WIDE)
+    )
+)
+
 

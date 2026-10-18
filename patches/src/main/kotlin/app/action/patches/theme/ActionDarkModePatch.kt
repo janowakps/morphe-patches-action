@@ -4,6 +4,7 @@ import app.action.patches.shared.Constants.COMPATIBILITY_ACTION
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
 private data class ColorOverride(
     val field: String,
@@ -132,6 +133,27 @@ val actionDarkModePatch = bytecodePatch(
 
         // Force foreground color parameter (p1) to solid black (0xFF000000) at method entry
         qrMethod.addInstructions(0, "const/high16 p1, -0x1000000")
+
+        // Override DropdownMenu (Material 3 popup) background container color in g3.l.a
+        // When containerColor is unspecified (0L), it defaults to Material 3 light SurfaceContainer (#F3EDF7).
+        // In dark mode, primary text (neutral900) is #FFF0F0F0, causing invisible white-on-light text in the receipt
+        // overflow menu ("Pobierz paragon", "Udostępnij swój paragon").
+        // This forces the fallback containerColor to dark card background (#FF282828).
+        val dropdownMethod = DropdownMenuFingerprint.method
+        val moveResultInstruction = DropdownMenuFingerprint.instructionMatches.last()
+        val moveResultIndex = moveResultInstruction.index
+        val reg = (moveResultInstruction.instruction as? OneRegisterInstruction)?.registerA ?: 11
+        val regName = "v$reg"
+        val regNext = "v${reg + 1}"
+
+        dropdownMethod.addInstructions(
+            moveResultIndex + 1,
+            """
+                const-wide $regName, 0x00000000ff282828L
+                invoke-static {$regName, $regNext}, Lh4/e0;->e(J)J
+                move-result-wide $regName
+            """
+        )
     }
 }
 
